@@ -51,7 +51,7 @@ class SubstrateInterface:
     def __init__(self, url=None, websocket=None, ss58_format=None, type_registry=None, type_registry_preset=None,
                  cache_region=None, runtime_config=None, use_remote_preset=False, ws_options=None,
                  auto_discover=True, auto_reconnect=True, config=None, chainspec=None,
-                 relay_chainspecs=None, relay_chain_ids=None, request_timeout=5):
+                 relay_chainspecs=None, relay_chain_ids=None, request_timeout=5, api_key=None):
         """
         A specialized class in interfacing with a Substrate node.
 
@@ -110,6 +110,7 @@ class SubstrateInterface:
         self.websocket = None
         self.transport = None
         self.request_timeout = request_timeout
+        self.api_key = api_key
 
         # Websocket connection options
         self.ws_options = ws_options or {}
@@ -167,9 +168,20 @@ class SubstrateInterface:
                 on_connect=self._set_websocket
             )
         else:
+            if self.api_key:
+                headers = {
+                    'content-type': "application/json",
+                    'cache-control': "no-cache",
+                    'x-api-key': self.api_key
+                }
+            else:
+                headers = {
+                    'content-type': "application/json",
+                    'cache-control': "no-cache",
+                }
             self.transport = HttpTransport(
                 url=self.url,
-                headers=self.default_headers,
+                headers=headers,
                 debug_fn=self.debug_message,
                 request_timeout=self.request_timeout
             )

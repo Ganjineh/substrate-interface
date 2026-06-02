@@ -7,7 +7,7 @@ from ..exceptions import SubstrateRequestException, ConfigurationError
 
 
 class HttpTransport(TransportBase):
-    def __init__(self, url, headers=None, debug_fn=None):
+    def __init__(self, url, headers=None, debug_fn=None, request_timeout=5):
         super().__init__(debug_fn=debug_fn)
         self.url = url
         self.headers = headers or {
@@ -15,12 +15,13 @@ class HttpTransport(TransportBase):
             'cache-control': "no-cache"
         }
         self.session = requests.Session()
+        self.request_timeout = request_timeout
 
     def rpc_request(self, payload, result_handler=None):
         if result_handler:
             raise ConfigurationError("Result handlers only available for websockets (ws://) connections")
 
-        response = self.session.request("POST", self.url, data=json.dumps(payload), headers=self.headers)
+        response = self.session.request("POST", self.url, data=json.dumps(payload), headers=self.headers, timeout=self.request_timeout)
 
         if response.status_code != 200:
             raise SubstrateRequestException(
